@@ -19,10 +19,10 @@ tasks:
       - task: update_flux_gitrepo_url
       - task: push_flux_instance_update
       - task: apply_flux_instance
-      - task: create_aws_credentials_file
-      - task: dry_run_create_aws_creds
-      - task: encrypt_aws_creds
-      - task: push_aws_creds_to_repo
+        #      - task: create_aws_credentials_file
+        #      - task: dry_run_create_aws_creds
+        #      - task: encrypt_aws_creds
+        #      - task: push_aws_creds_to_repo
       - task: print_setup_complete
 
   install_k3d:
@@ -32,7 +32,7 @@ tasks:
 
   create_cluster:
     cmds:
-      - unset KUBECONFIG; k3d cluster create -i rancher/k3s:v1.30.0-rc1-k3s1 -s 3 ch10-crossplane
+      - unset KUBECONFIG; k3d cluster create -i rancher/k3s:v1.30.0-rc1-k3s1 -s 3 ch10-crossplane-rk
     desc: Create Kubernetes cluster with k3d
 
   verify_cluster:
@@ -50,8 +50,8 @@ tasks:
 
   switch_context:
     cmds:
-      - kubectl config use-context k3d-ch10-crossplane
-    desc: Switch context to k3d-ch10-crossplane
+      - kubectl config use-context k3d-ch10-crossplane-rk
+    desc: Switch context to k3d-ch10-crossplane-rk
 
   install_flux_operator:
     cmds:
@@ -95,7 +95,7 @@ tasks:
 
   update_flux_gitrepo_url:
     cmds:
-      - sed -i '' "s|PacktPublishing|{{.GITHUB_USERNAME}}|g" ../clusters/multi-cluster-crossplane/apps/flux/flux-instance.yaml
+      - sed -i "s|PacktPublishing|{{.GITHUB_USERNAME}}|g" ../clusters/multi-cluster-crossplane/apps/flux/flux-instance.yaml
     desc: Update GITHUB_USERNAME in the Flux instance YAML file
 
   push_flux_instance_update:
@@ -110,29 +110,29 @@ tasks:
       - kubectl apply -f https://raw.githubusercontent.com/{{.GITHUB_USERNAME}}/Simplifying-GitOps-with-FluxCD/main/ch10/clusters/multi-cluster-crossplane/apps/flux/flux-instance.yaml
     desc: Deploy FluxInstance CRD
 
-  create_aws_credentials_file:
-    cmds:
-      - echo "[default]" > aws-credentials.txt
-      - echo "aws_access_key_id = {{.AWS_ACCESS_KEY_ID}}" >> aws-credentials.txt
-      - echo "aws_secret_access_key = {{.AWS_SECRET_ACCESS_KEY}}" >> aws-credentials.txt
-    desc: Create AWS credentials file 
+      #  create_aws_credentials_file:
+      #    cmds:
+      #      - echo "[default]" > aws-credentials.txt
+      #      - echo "aws_access_key_id = {{.AWS_ACCESS_KEY_ID}}" >> aws-credentials.txt
+      #      - echo "aws_secret_access_key = {{.AWS_SECRET_ACCESS_KEY}}" >> aws-credentials.txt
+      #    desc: Create AWS credentials file 
 
-  dry_run_create_aws_creds:
-    cmds:
-      - kubectl create secret generic aws-creds -n crossplane-system --from-file=creds=./aws-credentials.txt --dry-run=client -o yaml > ../clusters/multi-cluster-crossplane/resources/sops/aws-creds-sops.yaml
-    desc: Dry-run to create local aws-creds.yaml file
+      #  dry_run_create_aws_creds:
+      #    cmds:
+      #      - kubectl create secret generic aws-creds -n crossplane-system --from-file=creds=./aws-credentials.txt --dry-run=client -o yaml > ../clusters/multi-cluster-crossplane/resources/sops/aws-creds-sops.yaml
+      #    desc: Dry-run to create local aws-creds.yaml file
 
-  encrypt_aws_creds:
-    cmds:
-      - sops --age=$(cat age.pub) --encrypt --encrypted-regex '^(data|stringData)$' --in-place ../clusters/multi-cluster-crossplane/resources/sops/aws-creds-sops.yaml
-    desc: Encrypt AWS credentials file with Age key
+      #  encrypt_aws_creds:
+      #    cmds:
+      #      - sops --age=$(cat age.pub) --encrypt --encrypted-regex '^(data|stringData)$' --in-place ../clusters/multi-cluster-crossplane/resources/sops/aws-creds-sops.yaml
+      #    desc: Encrypt AWS credentials file with Age key
 
-  push_aws_creds_to_repo:
-    cmds:
-      - git add ../clusters/multi-cluster-crossplane/resources/sops/aws-creds-sops.yaml
-      - git commit -m "Push aws creds"
-      - git push
-    desc: Commit and push the updated encrypted AWS creds YAML file to the repository
+      #  push_aws_creds_to_repo:
+      #    cmds:
+      #      - git add ../clusters/multi-cluster-crossplane/resources/sops/aws-creds-sops.yaml
+      #      - git commit -m "Push aws creds"
+      #      - git push
+      #    desc: Commit and push the updated encrypted AWS creds YAML file to the repository
 
   print_setup_complete:
     cmds:
